@@ -25,7 +25,7 @@ Uma aplicação web (PoC) para cadastro, triagem e busca de itens para doação,
 * **Backend:** Java, Spring Boot
 * **Banco de Dados:** MongoDB (NoSQL)
 * **Frontend:** HTML, CSS, JS 
-* **Testes & Cobertura:** JUnit
+* **Testes & Cobertura:** JUnit, Mockito, Jacoco (Geração de relatórios)
 * **Versionamento:** Git e GitHub
 
 ---
