@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "doacoes")
 @Getter
@@ -16,17 +17,16 @@ public class DoacaoModel {
 
     @Id
     private String id;
-    private String nome_doador;
+    @Field("nome_doador")
+    private String nomeDoador;
+    @Field("item_doacao")
     private String itemDoacao;
     private String obs;
-    private DOACAO_STATUS status;
-    private String estado_uf;
+    private DoacaoStatus status;
+    @Field("estado_uf")
+    private String estadoUf;
     private String cidade;
 
-    enum DOACAO_STATUS{
-        DISPONIVEL,
-        DOADO,
-        RESERVADO
-    }
+
 
 }
