@@ -2,7 +2,7 @@ services:
   mongodb:
     image: mongo:7.0
     container_name: ${CONTAINER_NAME}
-#    restart: always
+    #    restart: always
     ports:
       - "${MONGO_PORT}:27017"
     environment:

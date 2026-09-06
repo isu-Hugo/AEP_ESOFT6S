@@ -1,3 +1,10 @@
 spring:
   application:
     name: aep
+
+    data:
+      mongodb:
+        host: localhost
+        port: ${MONGO_PORT}
+        username: ${DB_ROOT_NAME}
+        password: ${DB_ROOT_PASS}
