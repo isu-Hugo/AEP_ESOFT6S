@@ -6,8 +6,8 @@ import { FormularioDoacoes } from './formulario-doacoes/formulario-doacoes';
   selector: 'app-root',
   imports: [RouterOutlet, FormularioDoacoes],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('front-app');
+  protected readonly title = signal('FRONT');
 }
