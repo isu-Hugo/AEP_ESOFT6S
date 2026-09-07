@@ -22,4 +22,14 @@ public class DoacaoService {
                 .map(mapper::toResponse)
                 .toList();
     }
+
+    public RequestDoacaoDTO save(RequestDoacaoDTO dto){
+        DoacaoModel r = doacaoRepository.save(mapper.toModel(dto));
+        return mapper.toResponse(r);
+    }
+
+    public RequestDoacaoDTO findById(String id){
+        DoacaoModel r = doacaoRepository.findById(id).orElseThrow();
+        return mapper.toResponse(r);
+    }
 }

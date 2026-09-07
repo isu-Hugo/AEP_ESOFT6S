@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class DoacaoModel {
 
     @Id

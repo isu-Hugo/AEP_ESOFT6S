@@ -25,4 +25,19 @@ public class DoacaoMapper {
                 .ponto_coleta(m.getPontoColeta())
                 .build();
     }
+
+    public DoacaoModel toModel(RequestDoacaoDTO dto){
+        return DoacaoModel.builder()
+                .itemDoacao(dto.item_doacao())
+                .obs(dto.obs())
+                .status(dto.status())
+                .estadoUf(dto.estado_uf())
+                .cidade(dto.cidade())
+                .categoriaDoacao(dto.categoria_doacao())
+                .tamanho(dto.tamanho())
+                .estadoConservacao(dto.estado_conservacao())
+                .pontoColeta(dto.ponto_coleta())
+                .build();
+
+    }
 }
