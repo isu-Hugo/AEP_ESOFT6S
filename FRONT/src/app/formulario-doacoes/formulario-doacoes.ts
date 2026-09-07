@@ -11,7 +11,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./formulario-doacoes.css']
 })
 export class FormularioDoacoes {
-  apiUrl = 'http://localhost:8080/api/doacoes';
+  apiUrl = 'http://localhost:8080/api/v1/doacao';
 
   itemDoacao = '';
   categoria = 'Roupa';
