@@ -2,11 +2,12 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "3ee8668e-d69d-4450-9574-4a3a9dd05c35"
   },
   "newProjectRoot": "projects",
   "projects": {
-    "FRONT": {
+    "front-app": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -24,9 +25,15 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ]
+            "styles": ["src/material-theme.scss", "src/styles.css"],
+            "server": "src/main.server.ts",
+            "outputMode": "server",
+            "security": {
+              "allowedHosts": []
+            },
+            "ssr": {
+              "entry": "src/server.ts"
+            }
           },
           "configurations": {
             "production": {
@@ -56,10 +63,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "FRONT:build:production"
+              "buildTarget": "front-app:build:production"
             },
             "development": {
-              "buildTarget": "FRONT:build:development"
+              "buildTarget": "front-app:build:development"
             }
           },
           "defaultConfiguration": "development"
