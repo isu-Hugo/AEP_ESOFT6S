@@ -13,8 +13,8 @@ public class DoacaoModel {
 
     @Id
     private String id;
-    @Field("nome_doador")
-    private String nomeDoador;
+//    @Field("nome_doador")
+//    private String nomeDoador;
     @Field("item_doacao")
     private String itemDoacao;
     private String obs;
@@ -22,6 +22,16 @@ public class DoacaoModel {
     @Field("estado_uf")
     private String estadoUf;
     private String cidade;
+
+    @Field("categoria_doacao")
+    private CategoriaDoacao categoriaDoacao;
+    private String tamanho;
+    @Field("estado_conservacao")
+    private EstadoConservacao estadoConservacao;
+    @Field("ponto_coleta")
+    private String pontoColeta;
+
+
 
 
 }
