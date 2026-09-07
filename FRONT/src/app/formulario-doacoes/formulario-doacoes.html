@@ -1,0 +1,84 @@
+<div class="pagina">
+  <span class="bolha" *ngFor="let b of bolhas" [style.top]="b.top" [style.left]="b.left" [style.width.px]="b.size" [style.height.px]="b.size"></span>
+
+  <img src="https://png.pngtree.com/png-vector/20250613/ourmid/pngtree-diverse-people-holding-hands-in-circle-representing-unity-and-solidarity-png-image_16526826.png" class="imagem-canto" alt="">
+
+  <div class="topo">Doação Solidária</div>
+
+  <div class="container">
+    <div *ngIf="!concluido">
+      <h2>Cadastrar Doação</h2>
+      <p class="subtitulo">Leva menos de 1 minuto</p>
+
+      <div class="progresso">
+        <div class="progresso-barra" [style.width.%]="((passoAtual + 1) / totalPassos) * 100"></div>
+      </div>
+
+      <form (ngSubmit)="publicarDoacao()">
+        <div class="slide" *ngIf="passoAtual === 0">
+          <label>Item da doação</label>
+          <input type="text" [(ngModel)]="itemDoacao" name="itemDoacao">
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 1">
+          <label>Categoria</label>
+          <select [(ngModel)]="categoria" name="categoria">
+            <option value="Roupa">Roupa</option>
+            <option value="Calçado">Calçado</option>
+            <option value="Cobertor">Cobertor</option>
+            <option value="Cama e banho">Cama e banho</option>
+            <option value="Brinquedo">Brinquedo</option>
+            <option value="Alimento não perecível">Alimento não perecível</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 2">
+          <label>Tamanho</label>
+          <input type="text" [(ngModel)]="tamanho" name="tamanho" placeholder="Ex: M, 42, único">
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 3">
+          <label>Estado de conservação</label>
+          <select [(ngModel)]="estadoConservacao" name="estadoConservacao">
+            <option value="Novo">Novo</option>
+            <option value="Seminovo">Seminovo</option>
+            <option value="Usado">Usado</option>
+          </select>
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 4">
+          <label>Observação</label>
+          <input type="text" [(ngModel)]="obs" name="obs" placeholder="Detalhes extras">
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 5">
+          <label>Estado (UF)</label>
+          <input type="text" [(ngModel)]="estadoUf" name="estadoUf" maxlength="2">
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 6">
+          <label>Cidade</label>
+          <input type="text" [(ngModel)]="cidade" name="cidade">
+        </div>
+
+        <div class="slide" *ngIf="passoAtual === 7">
+          <label>Ponto de coleta</label>
+          <input type="text" [(ngModel)]="pontoColeta" name="pontoColeta" placeholder="Ex: retirar na praça central">
+        </div>
+
+        <div class="navegacao">
+          <button type="button" class="btn-voltar" (click)="passoAnterior()" *ngIf="passoAtual > 0">Voltar</button>
+          <button type="button" class="btn-proximo" (click)="proximoPasso()" [disabled]="!passoValido()" *ngIf="passoAtual < totalPassos - 1">Próximo</button>
+          <button type="submit" class="btn-publicar" [disabled]="!passoValido() || enviando" *ngIf="passoAtual === totalPassos - 1">Publicar Doação</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="agradecimento" *ngIf="concluido">
+      <div class="check">✓</div>
+      <h2>Obrigado pela sua doação!</h2>
+      <p>Você está ajudando a transformar a vida de alguém. Pequenos gestos fazem grandes diferenças.</p>
+    </div>
+  </div>
+</div>
