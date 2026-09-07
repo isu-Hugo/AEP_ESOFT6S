@@ -23,4 +23,5 @@ public class DoacaoModel {
     private String estadoUf;
     private String cidade;
 
+
 }
