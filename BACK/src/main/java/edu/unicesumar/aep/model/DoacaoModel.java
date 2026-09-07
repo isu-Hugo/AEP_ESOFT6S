@@ -1,16 +1,12 @@
 package edu.unicesumar.aep.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "doacoes")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class DoacaoModel {
@@ -26,7 +22,5 @@ public class DoacaoModel {
     @Field("estado_uf")
     private String estadoUf;
     private String cidade;
-
-
 
 }

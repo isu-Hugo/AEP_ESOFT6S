@@ -2,9 +2,8 @@ spring:
   application:
     name: aep
 
-    data:
-      mongodb:
-        host: localhost
-        port: ${MONGO_PORT}
-        username: ${DB_ROOT_NAME}
-        password: ${DB_ROOT_PASS}
+  config:
+    import: "optional:file:.env[.properties]"
+
+  mongodb:
+    uri: mongodb://${DB_ROOT_NAME}:${DB_ROOT_PASS}@localhost:${MONGO_PORT}/${DB_NAME}?authSource=admin
