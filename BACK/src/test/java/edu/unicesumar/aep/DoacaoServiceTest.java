@@ -61,13 +61,12 @@ public class DoacaoServiceTest {
     @Test
     @DisplayName("Deve retornar uma lista de doacoes no findAll")
     void deveRetornarListaDeDoacoesNoFindAll() {
-        
+
         DoacaoModel doacaoModel = new DoacaoModel();
         RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
                 .id("1")
                 .item_doacao("Camiseta")
                 .build();
-
 
         when(doacaoRepository.findAll()).thenReturn(List.of(doacaoModel));
         when(mapper.toResponse(doacaoModel)).thenReturn(dto);
@@ -83,11 +82,10 @@ public class DoacaoServiceTest {
     @Test
     @DisplayName("Deve lancar excecao ao buscar doacao por ID inexistente")
     public void deveLancarExcecaoQuandoIdNaoEncontrado() {
-        
+
         String id = "id-inexistente";
         when(doacaoRepository.findById(id)).thenReturn(Optional.empty());
 
-        
         assertThrows(NoSuchElementException.class, () -> {
             doacaoService.findById(id);
         });
@@ -96,5 +94,25 @@ public class DoacaoServiceTest {
         verify(mapper, never()).toResponse(any());
     }
 
+    @Test
+    @DisplayName("Deve retornar doacao por ID com sucesso")
+    public void deveRetornarDoacaoQuandoIdExistir() {
+        String id = "1";
+        DoacaoModel model = new DoacaoModel();
+        RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
+                .id(id)
+                .item_doacao("Camiseta")
+                .build();
+
+        when(doacaoRepository.findById(id)).thenReturn(java.util.Optional.of(model));
+        when(mapper.toResponse(model)).thenReturn(dto);
+
+        RequestDoacaoDTO resultado = doacaoService.findById(id);
+
+        assertNotNull(resultado);
+        assertEquals(id, resultado.id());
+        verify(doacaoRepository, times(1)).findById(id);
+        verify(mapper, times(1)).toResponse(model);
+    }
 
 }

@@ -33,6 +33,4 @@ public class DoacaoModel {
     private String pontoColeta;
 
 
-
-
 }
