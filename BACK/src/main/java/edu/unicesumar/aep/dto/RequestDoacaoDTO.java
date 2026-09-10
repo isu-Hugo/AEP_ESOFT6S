@@ -4,7 +4,6 @@ import edu.unicesumar.aep.model.CategoriaDoacao;
 import edu.unicesumar.aep.model.DoacaoStatus;
 import edu.unicesumar.aep.model.EstadoConservacao;
 import lombok.Builder;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 @Builder
 public record RequestDoacaoDTO(
