@@ -1,7 +1,6 @@
 package edu.unicesumar.aep;
 
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +20,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import edu.unicesumar.aep.controller.DoacaoController;
 import edu.unicesumar.aep.dto.RequestDoacaoDTO;
+import edu.unicesumar.aep.dto.ResponseDoacaoDTO;
 import edu.unicesumar.aep.service.DoacaoService;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,15 +35,15 @@ public class DoacaoControllerTest {
     @Test
     @DisplayName("Deve retornar status 200 OK no findAll")
     void deveBuscarTodas() {
-        RequestDoacaoDTO dto = RequestDoacaoDTO.builder().id("1").item_doacao("Camiseta").build();
-        when(doacaoService.findAll()).thenReturn(List.of(dto));
+        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id("1").item_doacao("Camiseta").build();
+        when(doacaoService.findAll(null, null)).thenReturn(List.of(dto));
 
-        ResponseEntity<List<RequestDoacaoDTO>> response = doacaoController.findAll();
+        ResponseEntity<List<ResponseDoacaoDTO>> response = doacaoController.findAll(null, null);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
-        verify(doacaoService, times(1)).findAll();
+        verify(doacaoService, times(1)).findAll(null, null);
     }
 
     @Test
@@ -53,11 +53,11 @@ public class DoacaoControllerTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         RequestDoacaoDTO dtoInput = RequestDoacaoDTO.builder().item_doacao("Camiseta").build();
-        RequestDoacaoDTO dtoOutput = RequestDoacaoDTO.builder().id("123").item_doacao("Camiseta").build();
+        ResponseDoacaoDTO dtoOutput = ResponseDoacaoDTO.builder().id("123").item_doacao("Camiseta").build();
 
         when(doacaoService.save(dtoInput)).thenReturn(dtoOutput);
 
-        ResponseEntity<RequestDoacaoDTO> response = doacaoController.save(dtoInput);
+        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.save(dtoInput);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -69,10 +69,10 @@ public class DoacaoControllerTest {
     @DisplayName("Deve retornar status 200 OK no findById")
     void deveBuscarPorId() {
         String id = "123";
-        RequestDoacaoDTO dto = RequestDoacaoDTO.builder().id(id).item_doacao("Camiseta").build();
+        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id(id).item_doacao("Camiseta").build();
         when(doacaoService.findById(id)).thenReturn(dto);
 
-        ResponseEntity<RequestDoacaoDTO> response = doacaoController.findById(id);
+        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.findById(id);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
