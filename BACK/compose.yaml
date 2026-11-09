@@ -10,6 +10,4 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_NAME}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASS}
-    volumes:
-      - ./data:/data/db
 
