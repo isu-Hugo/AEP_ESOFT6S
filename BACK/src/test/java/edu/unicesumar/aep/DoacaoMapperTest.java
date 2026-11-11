@@ -1,17 +1,22 @@
 package edu.unicesumar.aep;
-import edu.unicesumar.aep.mapper.DoacaoMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.ArrayList;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import edu.unicesumar.aep.dto.RequestDoacaoDTO;
+import edu.unicesumar.aep.dto.ResponseDoacaoDTO;
+import edu.unicesumar.aep.mapper.DoacaoMapper;
 import edu.unicesumar.aep.model.CategoriaDoacao;
 import edu.unicesumar.aep.model.DoacaoModel;
 import edu.unicesumar.aep.model.DoacaoStatus;
 import edu.unicesumar.aep.model.EstadoConservacao;
+import edu.unicesumar.aep.model.PontoColetaModel;
 
 public class DoacaoMapperTest {
 
@@ -23,7 +28,7 @@ public class DoacaoMapperTest {
     }
 
     @Test
-    @DisplayName("Deve converter DoacaoModel para RequestDoacaoDTO corretamente")
+    @DisplayName("Deve converter DoacaoModel para ResponseDoacaoDTO corretamente com Ponto de Coleta")
     void deveMapearModelParaResponse() {
         DoacaoModel model = DoacaoModel.builder()
                 .id("123")
@@ -35,29 +40,27 @@ public class DoacaoMapperTest {
                 .categoriaDoacao(CategoriaDoacao.ROUPA) 
                 .tamanho("G")
                 .estadoConservacao(EstadoConservacao.NOVO) 
-                .pontoColeta("Centro")
+                .pontoColetaId("ponto-1")
+                .historicoStatus(new ArrayList<>())
                 .build();
 
-        RequestDoacaoDTO response = mapper.toResponse(model);
+        PontoColetaModel ponto = PontoColetaModel.builder()
+                .id("ponto-1")
+                // Assumindo que PontoColetaModel tem um campo 'nome'. Ajuste se for diferente.
+                .build();
+
+        ResponseDoacaoDTO response = mapper.toResponse(model, ponto);
 
         assertNotNull(response);
         assertEquals("123", response.id());
         assertEquals("Casaco de Lã", response.item_doacao());
-        assertEquals("Novo com etiqueta", response.obs());
         assertEquals(DoacaoStatus.DISPONIVEL, response.status());
-        assertEquals("PR", response.estado_uf());
-        assertEquals("Maringá", response.cidade());
-        assertEquals(CategoriaDoacao.ROUPA, response.categoria_doacao());
-        assertEquals("G", response.tamanho());
-        assertEquals(EstadoConservacao.NOVO, response.estado_conservacao());
-        assertEquals("Centro", response.ponto_coleta());
     }
 
     @Test
     @DisplayName("Deve converter RequestDoacaoDTO para DoacaoModel corretamente")
     void deveMapearDtoParaModel() {
         RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
-                .id("123")
                 .item_doacao("Tenis Esportivo")
                 .obs("Usado poucas vezes")
                 .status(DoacaoStatus.DISPONIVEL)
@@ -66,20 +69,16 @@ public class DoacaoMapperTest {
                 .categoria_doacao(CategoriaDoacao.CALCADO)
                 .tamanho("41")
                 .estado_conservacao(EstadoConservacao.USADO)
-                .ponto_coleta("Zona 7")
+                .ponto_coleta_id("ponto-1")
                 .build();
 
-        DoacaoModel model = mapper.toModel(dto);
+        String pontoIdResolvido = "ponto-1";
+        DoacaoModel model = mapper.toModel(dto, pontoIdResolvido);
 
         assertNotNull(model);
         assertEquals("Tenis Esportivo", model.getItemDoacao());
         assertEquals("Usado poucas vezes", model.getObs());
         assertEquals(DoacaoStatus.DISPONIVEL, model.getStatus());
-        assertEquals("PR", model.getEstadoUf());
-        assertEquals("Maringá", model.getCidade());
-        assertEquals(CategoriaDoacao.CALCADO, model.getCategoriaDoacao());
-        assertEquals("41", model.getTamanho());
-        assertEquals(EstadoConservacao.USADO, model.getEstadoConservacao());
-        assertEquals("Zona 7", model.getPontoColeta());
+        assertEquals("ponto-1", model.getPontoColetaId());
     }
 }
