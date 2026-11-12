@@ -1,16 +1,18 @@
 package edu.unicesumar.aep;
 
-import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +21,11 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import edu.unicesumar.aep.controller.DoacaoController;
+import edu.unicesumar.aep.dto.AtualizarStatusDTO;
 import edu.unicesumar.aep.dto.RequestDoacaoDTO;
 import edu.unicesumar.aep.dto.ResponseDoacaoDTO;
+import edu.unicesumar.aep.model.DoacaoStatus;
+import edu.unicesumar.aep.model.HistoricoStatus;
 import edu.unicesumar.aep.service.DoacaoService;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,50 +38,83 @@ public class DoacaoControllerTest {
     private DoacaoController doacaoController;
 
     @Test
-    @DisplayName("Deve retornar status 200 OK no findAll")
-    void deveBuscarTodas() {
-        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id("1").item_doacao("Camiseta").build();
+    @DisplayName("Deve retornar lista de doacoes")
+    void deveRetornarListaDoacoes() {
+        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id("1").build();
         when(doacaoService.findAll(null, null)).thenReturn(List.of(dto));
 
         ResponseEntity<List<ResponseDoacaoDTO>> response = doacaoController.findAll(null, null);
 
-        assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
-        verify(doacaoService, times(1)).findAll(null, null);
     }
 
     @Test
-    @DisplayName("Deve retornar status 201 Created no save")
+    @DisplayName("Deve salvar doacao e retornar CREATED")
     void deveSalvarDoacao() {
+        // Necessário para o ServletUriComponentsBuilder não dar erro
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
-        RequestDoacaoDTO dtoInput = RequestDoacaoDTO.builder().item_doacao("Camiseta").build();
-        ResponseDoacaoDTO dtoOutput = ResponseDoacaoDTO.builder().id("123").item_doacao("Camiseta").build();
+        RequestDoacaoDTO requestDto = RequestDoacaoDTO.builder().item_doacao("Teste").build();
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").item_doacao("Teste").build();
+        
+        when(doacaoService.save(any(RequestDoacaoDTO.class))).thenReturn(responseDto);
 
-        when(doacaoService.save(dtoInput)).thenReturn(dtoOutput);
+        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.save(requestDto);
 
-        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.save(dtoInput);
-
-        assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("123", response.getBody().id());
-        verify(doacaoService, times(1)).save(dtoInput);
+        assertNotNull(response.getHeaders().getLocation());
+        assertEquals("1", response.getBody().id());
     }
 
     @Test
-    @DisplayName("Deve retornar status 200 OK no findById")
+    @DisplayName("Deve buscar doacao por ID")
     void deveBuscarPorId() {
-        String id = "123";
-        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id(id).item_doacao("Camiseta").build();
-        when(doacaoService.findById(id)).thenReturn(dto);
+        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id("1").build();
+        when(doacaoService.findById("1")).thenReturn(dto);
 
-        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.findById(id);
+        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.findById("1");
 
-        assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(id, response.getBody().id());
-        verify(doacaoService, times(1)).findById(id);
+        assertEquals("1", response.getBody().id());
+    }
+
+    @Test
+    @DisplayName("Deve atualizar status da doacao")
+    void deveAtualizarStatus() {
+        AtualizarStatusDTO atualizarDto = new AtualizarStatusDTO(DoacaoStatus.RESERVADO, "Motivo");
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").status(DoacaoStatus.RESERVADO).build();
+        
+        when(doacaoService.atualizarStatus(eq("1"), any(AtualizarStatusDTO.class))).thenReturn(responseDto);
+
+        ResponseEntity<ResponseDoacaoDTO> response = doacaoController.atualizarStatus("1", atualizarDto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(DoacaoStatus.RESERVADO, response.getBody().status());
+    }
+
+    @Test
+    @DisplayName("Deve buscar historico de status")
+    void deveBuscarHistorico() {
+        HistoricoStatus historico = HistoricoStatus.builder().observacao("Teste").build();
+        when(doacaoService.findHistorico("1")).thenReturn(List.of(historico));
+
+        ResponseEntity<List<HistoricoStatus>> response = doacaoController.findHistorico("1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+    }
+
+    @Test
+    @DisplayName("Deve buscar doacoes por ponto de coleta")
+    void deveBuscarPorPontoColeta() {
+        ResponseDoacaoDTO dto = ResponseDoacaoDTO.builder().id("1").build();
+        when(doacaoService.findByPontoColeta("ponto-1")).thenReturn(List.of(dto));
+
+        ResponseEntity<List<ResponseDoacaoDTO>> response = doacaoController.findDoacoesPorPonto("ponto-1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
     }
 }

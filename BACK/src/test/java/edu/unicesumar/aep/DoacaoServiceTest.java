@@ -1,29 +1,38 @@
 package edu.unicesumar.aep;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import edu.unicesumar.aep.dto.AtualizarStatusDTO;
 import edu.unicesumar.aep.dto.RequestDoacaoDTO;
+import edu.unicesumar.aep.dto.ResponseDoacaoDTO;
+import edu.unicesumar.aep.exception.RecursoNaoEncontradoException;
+import edu.unicesumar.aep.exception.RegraDeNegocioException;
+import edu.unicesumar.aep.exception.StatusConflictException;
 import edu.unicesumar.aep.mapper.DoacaoMapper;
 import edu.unicesumar.aep.model.DoacaoModel;
+import edu.unicesumar.aep.model.DoacaoStatus;
+import edu.unicesumar.aep.model.HistoricoStatus;
+import edu.unicesumar.aep.model.PontoColetaModel;
 import edu.unicesumar.aep.repository.DoacaoRepository;
 import edu.unicesumar.aep.service.DoacaoService;
+import edu.unicesumar.aep.service.PontoColetaService;
 
 @ExtendWith(MockitoExtension.class)
 public class DoacaoServiceTest {
@@ -32,87 +41,176 @@ public class DoacaoServiceTest {
     private DoacaoRepository doacaoRepository;
 
     @Mock
+    private PontoColetaService pontoColetaService;
+
+    @Mock
     private DoacaoMapper mapper;
 
     @InjectMocks
     private DoacaoService doacaoService;
 
     @Test
-    @DisplayName("Deve salvar doacao com sucesso quando dados forem validados")
-    public void deveSalvarDoacaoComSucesso() {
+    @DisplayName("findAll - com filtros retorna lista filtrada")
+    void findAll_comFiltros() {
+        DoacaoModel model = DoacaoModel.builder().id("1").pontoColetaId("p1").build();
+        PontoColetaModel ponto = PontoColetaModel.builder().id("p1").build();
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").build();
 
-        DoacaoModel docaoModel = new DoacaoModel();
-        RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
-                .id("1")
-                .item_doacao("Camiseta")
-                .build();
+        when(doacaoRepository.findByFiltros(DoacaoStatus.DISPONIVEL, "p1")).thenReturn(List.of(model));
+        when(pontoColetaService.findById("p1")).thenReturn(Optional.of(ponto));
+        when(mapper.toResponse(model, ponto)).thenReturn(responseDto);
 
-        when(mapper.toModel(dto)).thenReturn(docaoModel);
-        when(doacaoRepository.save(docaoModel)).thenReturn(docaoModel);
-        when(mapper.toResponse(docaoModel)).thenReturn(dto);
+        List<ResponseDoacaoDTO> resultado = doacaoService.findAll(DoacaoStatus.DISPONIVEL, "p1");
 
-        RequestDoacaoDTO resultado = doacaoService.save(dto);
-
-        assertNotNull(resultado);
-        assertEquals("1", resultado.id());
-        verify(doacaoRepository, times(1)).save(docaoModel);
-    }
-
-    @Test
-    @DisplayName("Deve retornar uma lista de doacoes no findAll")
-    void deveRetornarListaDeDoacoesNoFindAll() {
-
-        DoacaoModel doacaoModel = new DoacaoModel();
-        RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
-                .id("1")
-                .item_doacao("Camiseta")
-                .build();
-
-        when(doacaoRepository.findAll()).thenReturn(List.of(doacaoModel));
-        when(mapper.toResponse(doacaoModel)).thenReturn(dto);
-
-        List<RequestDoacaoDTO> resultado = doacaoService.findAll();
-
-        assertNotNull(resultado);
         assertEquals(1, resultado.size());
-        verify(doacaoRepository, times(1)).findAll();
-        verify(mapper, times(1)).toResponse(doacaoModel);
+        verify(doacaoRepository).findByFiltros(DoacaoStatus.DISPONIVEL, "p1");
     }
 
     @Test
-    @DisplayName("Deve lancar excecao ao buscar doacao por ID inexistente")
-    public void deveLancarExcecaoQuandoIdNaoEncontrado() {
+    @DisplayName("findAll - sem filtros retorna tudo")
+    void findAll_semFiltros() {
+        DoacaoModel model = DoacaoModel.builder().id("1").build();
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").build();
 
-        String id = "id-inexistente";
-        when(doacaoRepository.findById(id)).thenReturn(Optional.empty());
+        when(doacaoRepository.findAll()).thenReturn(List.of(model));
+        when(mapper.toResponse(model, null)).thenReturn(responseDto);
 
-        assertThrows(NoSuchElementException.class, () -> {
-            doacaoService.findById(id);
-        });
+        List<ResponseDoacaoDTO> resultado = doacaoService.findAll(null, null);
 
-        verify(doacaoRepository, times(1)).findById(id);
-        verify(mapper, never()).toResponse(any());
+        assertEquals(1, resultado.size());
+        verify(doacaoRepository).findAll();
     }
 
     @Test
-    @DisplayName("Deve retornar doacao por ID com sucesso")
-    public void deveRetornarDoacaoQuandoIdExistir() {
-        String id = "1";
-        DoacaoModel model = new DoacaoModel();
+    @DisplayName("save - com nome do ponto cria ou obtem ponto")
+    void save_comNomePonto() {
         RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
-                .id(id)
-                .item_doacao("Camiseta")
+                .estado_uf("PR").cidade("Maringa").ponto_coleta("Centro")
                 .build();
+        PontoColetaModel ponto = PontoColetaModel.builder().id("p1").build();
+        DoacaoModel model = DoacaoModel.builder().id("1").build();
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").build();
 
-        when(doacaoRepository.findById(id)).thenReturn(java.util.Optional.of(model));
-        when(mapper.toResponse(model)).thenReturn(dto);
+        when(pontoColetaService.obterOuCriarPonto("PR", "Maringa", "Centro")).thenReturn(ponto);
+        when(mapper.toModel(dto, "p1")).thenReturn(model);
+        when(doacaoRepository.save(model)).thenReturn(model);
+        when(mapper.toResponse(model, ponto)).thenReturn(responseDto);
 
-        RequestDoacaoDTO resultado = doacaoService.findById(id);
+        ResponseDoacaoDTO resultado = doacaoService.save(dto);
 
         assertNotNull(resultado);
-        assertEquals(id, resultado.id());
-        verify(doacaoRepository, times(1)).findById(id);
-        verify(mapper, times(1)).toResponse(model);
+        verify(pontoColetaService).obterOuCriarPonto("PR", "Maringa", "Centro");
     }
 
+    @Test
+    @DisplayName("save - com id do ponto busca ponto existente")
+    void save_comIdPonto() {
+        RequestDoacaoDTO dto = RequestDoacaoDTO.builder()
+                .ponto_coleta_id("p1")
+                .build();
+        PontoColetaModel ponto = PontoColetaModel.builder().id("p1").build();
+        DoacaoModel model = DoacaoModel.builder().id("1").build();
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").build();
+
+        when(pontoColetaService.findById("p1")).thenReturn(Optional.of(ponto));
+        when(mapper.toModel(dto, "p1")).thenReturn(model);
+        when(doacaoRepository.save(model)).thenReturn(model);
+        when(mapper.toResponse(model, ponto)).thenReturn(responseDto);
+
+        ResponseDoacaoDTO resultado = doacaoService.save(dto);
+
+        assertNotNull(resultado);
+        verify(pontoColetaService).findById("p1");
+    }
+
+    @Test
+    @DisplayName("findById - lanca excecao quando nao existe")
+    void findById_naoExiste() {
+        when(doacaoRepository.findById("1")).thenReturn(Optional.empty());
+        assertThrows(RecursoNaoEncontradoException.class, () -> doacaoService.findById("1"));
+    }
+
+    @Test
+    @DisplayName("findHistorico - retorna lista de historico")
+    void findHistorico() {
+        List<HistoricoStatus> historico = new ArrayList<>();
+        historico.add(HistoricoStatus.builder().observacao("obs").build());
+        DoacaoModel model = new DoacaoModel();
+        model.setHistoricoStatus(historico);
+
+        when(doacaoRepository.findById("1")).thenReturn(Optional.of(model));
+        List<HistoricoStatus> resultado = doacaoService.findHistorico("1");
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    @DisplayName("findByPontoColeta - retorna lista de doacoes")
+    void findByPontoColeta() {
+        PontoColetaModel ponto = PontoColetaModel.builder().id("p1").build();
+        DoacaoModel model = DoacaoModel.builder().id("1").pontoColetaId("p1").build();
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").build();
+
+        when(pontoColetaService.findById("p1")).thenReturn(Optional.of(ponto));
+        when(doacaoRepository.findByPontoColetaId("p1")).thenReturn(List.of(model));
+        when(pontoColetaService.findById("p1")).thenReturn(Optional.of(ponto)); 
+        when(mapper.toResponse(model, ponto)).thenReturn(responseDto);
+
+        List<ResponseDoacaoDTO> resultado = doacaoService.findByPontoColeta("p1");
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    @DisplayName("findByPontoColeta - lanca excecao se ponto nao existir")
+    void findByPontoColeta_pontoNaoExiste() {
+        when(pontoColetaService.findById("p1")).thenReturn(Optional.empty());
+        assertThrows(RecursoNaoEncontradoException.class, () -> doacaoService.findByPontoColeta("p1"));
+    }
+
+    @Test
+    @DisplayName("atualizarStatus - sucesso de DISPONIVEL para RESERVADO")
+    void atualizarStatus_sucesso() {
+        DoacaoModel model = DoacaoModel.builder().id("1").status(DoacaoStatus.DISPONIVEL).build();
+        AtualizarStatusDTO dto = new AtualizarStatusDTO(DoacaoStatus.RESERVADO, "Reserva");
+        ResponseDoacaoDTO responseDto = ResponseDoacaoDTO.builder().id("1").build();
+
+        when(doacaoRepository.findById("1")).thenReturn(Optional.of(model));
+        when(doacaoRepository.updateStatusAtomico(eq("1"), eq(DoacaoStatus.DISPONIVEL), eq(DoacaoStatus.RESERVADO), any())).thenReturn(true);
+        when(doacaoRepository.findById("1")).thenReturn(Optional.of(model)); 
+        when(mapper.toResponse(model, null)).thenReturn(responseDto);
+
+        ResponseDoacaoDTO resultado = doacaoService.atualizarStatus("1", dto);
+        assertNotNull(resultado);
+    }
+
+    @Test
+    @DisplayName("atualizarStatus - lanca StatusConflictException se update falhar")
+    void atualizarStatus_conflito() {
+        DoacaoModel model = DoacaoModel.builder().id("1").status(DoacaoStatus.DISPONIVEL).build();
+        AtualizarStatusDTO dto = new AtualizarStatusDTO(DoacaoStatus.RESERVADO, "");
+
+        when(doacaoRepository.findById("1")).thenReturn(Optional.of(model));
+        when(doacaoRepository.updateStatusAtomico(eq("1"), eq(DoacaoStatus.DISPONIVEL), eq(DoacaoStatus.RESERVADO), any())).thenReturn(false);
+
+        assertThrows(StatusConflictException.class, () -> doacaoService.atualizarStatus("1", dto));
+    }
+
+    @Test
+    @DisplayName("validarTransicaoStatus - mesmo status lanca excecao")
+    void validarTransicaoStatus_mesmoStatus() {
+        DoacaoModel model = DoacaoModel.builder().id("1").status(DoacaoStatus.DISPONIVEL).build();
+        AtualizarStatusDTO dto = new AtualizarStatusDTO(DoacaoStatus.DISPONIVEL, null);
+
+        when(doacaoRepository.findById("1")).thenReturn(Optional.of(model));
+        assertThrows(RegraDeNegocioException.class, () -> doacaoService.atualizarStatus("1", dto));
+    }
+
+    @Test
+    @DisplayName("validarTransicaoStatus - de DOADO lanca excecao")
+    void validarTransicaoStatus_doado() {
+        DoacaoModel model = DoacaoModel.builder().id("1").status(DoacaoStatus.DOADO).build();
+        AtualizarStatusDTO dto = new AtualizarStatusDTO(DoacaoStatus.DISPONIVEL, null);
+
+        when(doacaoRepository.findById("1")).thenReturn(Optional.of(model));
+        assertThrows(RegraDeNegocioException.class, () -> doacaoService.atualizarStatus("1", dto));
+    }
 }
